@@ -8,9 +8,7 @@ companies = [
 ]
 
 # Define a dictionary to hold bookmarked companies
-bookmarked_companies = {
-    "Example Company": {"name": "Example Company", "contact_name": "Example Contact", "position": "Example Position", "linkedin": "https://linkedin.com/example"}
-}
+bookmarked_companies = {}
 
 # Define a dictionary to store the state of each company
 company_state = {company["name"]: {"status": "", "contract_amount": ""} for company in companies}
@@ -45,19 +43,14 @@ def main():
     if st.sidebar.button(" <- Go Back "):  # Large "Go Back" button at the top of the sidebar
         clear_text()
         st.experimental_rerun()
-        
 
-    st.sidebar.markdown("## Search a company")
+    
+
     search_query = st.sidebar.text_input("Search by company name", "")
 
     matching_companies = [company for company in companies if search_query.lower() in company["name"].lower()]
 
-    # Show bookmarked companies
-    st.sidebar.markdown("## Bookmarked Companies")
-    for name, company in bookmarked_companies.items():
-        if st.sidebar.button(name):
-            show_company_info(company, name)
-
+   
     for company in matching_companies:
         with st.expander(company['name'], expanded=True):
              # Bookmarking feature: replaced by the bookmark image (a placeholder button here)
@@ -67,7 +60,32 @@ def main():
 
             show_company_info(company, company['name'])
 
-           
+
+
+def show_bookmarked_companies():
+    st.subheader("Bookmarked Companies")
+    if len(bookmarked_companies)> 0:
+        for company in bookmarked_companies.values():
+            st.write(company["name"])
+            st.write(f"Contact Name: {company['contact_name']}")
+            st.write(f"Position: {company['position']}")
+            st.write(f"LinkedIn: {company['linkedin']}")
+            st.write("---")
+    else:
+        st.sidebar.image("download.png", width=100)  # Add your logo here, adjust the size as needed
+        st.sidebar.button(" <- Go Back ")
+        #display company 1 info:
+        st.subheader("Company A")
+        st.write("Contact Name: Contact A")
+        st.write("Position: Position A")
+        st.write("LinkedIn: https://linkedin.com/companya")
+
+        #tell streamlit to not show anything else:
+        st.stop()
+
+if st.sidebar.button("Bookmarked"):
+    show_bookmarked_companies()
+
 
 def show_company_info(company, key):
     st.header(f"Information for {company['name']}")
@@ -76,6 +94,11 @@ def show_company_info(company, key):
     st.write(f"LinkedIn: {company['linkedin']}")
     
     status = st.radio("Status", ['About to Contact', 'Already Contacted'], key=f"Status_{key}")
+    
+    # If the company is not in company_state, add it
+    if company["name"] not in company_state:
+        company_state[company["name"]] = {"status": "", "contract_amount": ""}
+    
     company_state[company["name"]]["status"] = status
 
     contract_amount = st.text_input('Contract Amount', key=f"Contract_{key}")
@@ -86,6 +109,8 @@ def show_company_info(company, key):
 
 # The "Go Back" button has been removed from each company's details
 
+
+    
 
 if __name__ == "__main__":
     main()

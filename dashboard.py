@@ -2,18 +2,23 @@ import streamlit as st
 
 # Define a list of companies and their contact information
 companies = [
-    {"name": "Company A", "contact_name": "Contact A", "email": "contact@companya.com", "position": "Position A", "phone": "123-456-7890", "linkedin": "https://linkedin.com/companya"},
-    {"name": "Company B", "contact_name": "Contact B", "email": "contact@companyb.com", "position": "Position B", "phone": "098-765-4321", "linkedin": "https://linkedin.com/companyb"},
-    {"name": "Company C", "contact_name": "Contact C", "email": "contact@companyc.com", "position": "Position C", "phone": "456-789-0123", "linkedin": "https://linkedin.com/companyc"},
+    {"name": "Company A", "contact_name": "Contact A", "position": "Position A", "linkedin": "https://linkedin.com/companya"},
+    {"name": "Company B", "contact_name": "Contact B", "position": "Position B", "linkedin": "https://linkedin.com/companyb"},
+    {"name": "Company C", "contact_name": "Contact C", "position": "Position C", "linkedin": "https://linkedin.com/companyc"},
 ]
 
 # Define a dictionary to hold bookmarked companies
 bookmarked_companies = {
-    "Example Company": {"name": "Example Company", "contact_name": "Example Contact", "email": "example@example.com", "position": "Example Position", "phone": "000-000-0000", "linkedin": "https://linkedin.com/example"}
+    "Example Company": {"name": "Example Company", "contact_name": "Example Contact", "position": "Example Position", "linkedin": "https://linkedin.com/example"}
 }
 
+# Define a dictionary to store the state of each company
+company_state = {company["name"]: {"status": "", "contract_amount": ""} for company in companies}
+
+def clear_text():
+    st.session_state["Search by company name"] = ""
+
 def main():
-    # Custom CSS
     # Custom CSS
     st.markdown("""
     <style>
@@ -24,45 +29,63 @@ def main():
     .sidebar .sidebar-content {
         background: #1e6f5c;
     }
+    /* Button hover style */
+    .stButton>button:hover {
+        color: black;
+        font-weight: bold;
+    }
+    /* Background color for expander - Assuming '.st-expander' is the correct class for the expanders */
+    .st-expander {
+        background: #f0f0f0; /* Very light gray */
+    }
     </style>
     """, unsafe_allow_html=True)
-    st.title("Skyline Design Company Contact Information")
+
+    st.sidebar.image("download.png", width=100)  # Add your logo here, adjust the size as needed
+    if st.sidebar.button(" <- Go Back "):  # Large "Go Back" button at the top of the sidebar
+        clear_text()
+        st.experimental_rerun()
+        
+
     st.sidebar.markdown("## Search a company")
     search_query = st.sidebar.text_input("Search by company name", "")
 
     matching_companies = [company for company in companies if search_query.lower() in company["name"].lower()]
-    for company in matching_companies:
-        with st.beta_expander(company['name'], expanded=True):
-            st.header(f"Information for {company['name']}")
-            st.write(f"Contact Name: {company['contact_name']}")
-            st.write(f"Email: {company['email']}")
-            st.write(f"Position: {company['position']}")
-            st.write(f"Phone: {company['phone']}")
-            st.write(f"LinkedIn: {company['linkedin']}")
-
-            # Similarity feature
-            st.subheader("Similar Companies")
-            for similar_company in companies:
-                if similar_company["name"][0] == company["name"][0]:
-                    with st.container():
-                        st.markdown(f"**Name**: {similar_company['name']}")
-                        st.markdown(f"**Contact Name**: {similar_company['contact_name']}")
-                        st.markdown(f"**Email**: {similar_company['email']}")
-                        st.markdown(f"**Position**: {similar_company['position']}")
-                        st.markdown(f"**Phone**: {similar_company['phone']}")
-                        st.markdown(f"**LinkedIn**: [link]({similar_company['linkedin']})")
-                        st.markdown("---")  # add a line separator
-
-            # Bookmarking feature
-            if st.button(f"Bookmark {company['name']}"):
-                bookmarked_companies[company['name']] = company
-                st.success(f"{company['name']} has been bookmarked!")
 
     # Show bookmarked companies
     st.sidebar.markdown("## Bookmarked Companies")
     for name, company in bookmarked_companies.items():
-        st.sidebar.markdown(f"**Name**: {company['name']}\n**Contact Name**: {company['contact_name']}\n**Email**: {company['email']}\n**Position**: {company['position']}\n**Phone**: {company['phone']}\n**LinkedIn**: [link]({company['linkedin']})")
+        if st.sidebar.button(name):
+            show_company_info(company, name)
+
+    for company in matching_companies:
+        with st.expander(company['name'], expanded=True):
+             # Bookmarking feature: replaced by the bookmark image (a placeholder button here)
+            if st.button("🔖", key=f"Bookmark_{company['name']}"):
+                bookmarked_companies[company['name']] = company
+                st.success(f"{company['name']} has been bookmarked!")
+
+            show_company_info(company, company['name'])
+
+           
+
+def show_company_info(company, key):
+    st.header(f"Information for {company['name']}")
+    st.write(f"Contact Name: {company['contact_name']}")
+    st.write(f"Position: {company['position']}")
+    st.write(f"LinkedIn: {company['linkedin']}")
+    
+    status = st.radio("Status", ['About to Contact', 'Already Contacted'], key=f"Status_{key}")
+    company_state[company["name"]]["status"] = status
+
+    contract_amount = st.text_input('Contract Amount', key=f"Contract_{key}")
+    company_state[company["name"]]["contract_amount"] = contract_amount
+
+    if st.button('More information', key=f"MoreInfo_{key}"):
+        st.write("Additional company information goes here...")
+
+# The "Go Back" button has been removed from each company's details
+
 
 if __name__ == "__main__":
     main()
-
